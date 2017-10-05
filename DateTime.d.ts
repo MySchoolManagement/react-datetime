@@ -28,6 +28,11 @@ declare namespace ReactDatetimeClass {
         milliseconds?: TimeConstraint;
     }
 
+
+    interface InputRendererComponentProps {
+        readonly openCalendar?: () => void
+    }
+
     type EventOrValueHandler<Event> = (event: Event | Moment | string) => void;
 
     export interface DatetimepickerProps {
@@ -104,7 +109,11 @@ declare namespace ReactDatetimeClass {
         /*
          Defines additional attributes for the input element of the component.
          */
-        inputProps?: Object;
+        inputProps?: Object;     
+        /*
+        The component which will be used to render the input. The openCalendar method is passed in the props.
+        */
+        renderInput?: React.ComponentClass<InputRendererComponentProps> | React.StatelessComponent<InputRendererComponentProps>;
         /*
          Define the dates that can be selected. The function receives (currentDate, selectedDate)
          and should return a true or false whether the currentDate is valid or not. See selectable dates.
