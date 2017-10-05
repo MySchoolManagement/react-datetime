@@ -104,7 +104,7 @@ declare namespace ReactDatetimeClass {
         /*
          Defines additional attributes for the input element of the component.
          */
-        inputProps?: React.HTMLProps<HTMLInputElement>;
+        inputProps?: Object;
         /*
          Define the dates that can be selected. The function receives (currentDate, selectedDate)
          and should return a true or false whether the currentDate is valid or not. See selectable dates.
