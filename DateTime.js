@@ -5,7 +5,8 @@ var assign = require('object-assign'),
 	createClass = require('create-react-class'),
 	moment = require('moment'),
 	React = require('react'),
-	CalendarContainer = require('./src/CalendarContainer')
+	CalendarContainer = require('./src/CalendarContainer'),
+	DefaultInputRenderer = require('./src/DefaultInputRenderer')
 	;
 
 var TYPES = PropTypes;
@@ -38,6 +39,7 @@ var Datetime = createClass({
 			className: '',
 			defaultValue: '',
 			inputProps: {},
+			renderInput: DefaultInputRenderer,
 			input: true,
 			onFocus: nof,
 			onBlur: nof,
@@ -416,11 +418,11 @@ var Datetime = createClass({
 			children = [];
 
 		if ( this.props.input ) {
-			children = [ React.createElement('input', assign({
+			children = [ React.createElement(this.props.renderInput, assign({
 				key: 'i',
 				type: 'text',
 				className: 'form-control',
-				onFocus: this.openCalendar,
+				openCalendar: this.openCalendar,
 				onChange: this.onInputChange,
 				onKeyDown: this.onInputKey,
 				value: this.state.inputValue
