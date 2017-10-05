@@ -1,5 +1,5 @@
 /*
-react-datetime v2.10.3
+react-datetime v2.10.3-msm.3
 https://github.com/YouCanBookMe/react-datetime
 MIT: https://github.com/YouCanBookMe/react-datetime/raw/master/LICENSE
 */
