@@ -281,7 +281,7 @@ describe('Datetime', () => {
 	describe('with custom props', () => {
 		it('input=false', () => {
 			const component = utils.createDatetime({ input: false });
-			expect(component.find('.rdt > .form-control').length).toEqual(0);
+			expect(component.find('.rdt .form-control').length).toEqual(0);
 			expect(component.find('.rdt > .rdtPicker').length).toEqual(1);
 		});
 
@@ -882,6 +882,64 @@ describe('Datetime', () => {
 			expect(onFocusFn).toHaveBeenCalledTimes(1);
 		});
 
+		describe('onViewModeChange', () => {
+			it('when switch from days to time view mode', () => {
+				const component = utils.createDatetime({ onViewModeChange: (viewMode) => {
+					expect(viewMode).toEqual('time');
+				}});
+				expect(utils.isDayView(component)).toBeTruthy();
+				utils.clickOnElement(component.find('.rdtTimeToggle'));
+				expect(utils.isTimeView(component)).toBeTruthy();
+			});
+
+			it('when switch from time to days view mode', () => {
+				const component = utils.createDatetime({ viewMode: 'time', onViewModeChange: (viewMode) => {
+					expect(viewMode).toEqual('days');
+				}});
+				expect(utils.isTimeView(component)).toBeTruthy();
+				utils.clickOnElement(component.find('.rdtSwitch'));
+				expect(utils.isDayView(component)).toBeTruthy();
+			});
+
+			it('when switch from days to months view mode', () => {
+				const component = utils.createDatetime({ onViewModeChange: (viewMode) => {
+					expect(viewMode).toEqual('months');
+				}});
+				expect(utils.isDayView(component)).toBeTruthy();
+				utils.clickOnElement(component.find('.rdtSwitch'));
+				expect(utils.isMonthView(component)).toBeTruthy();
+			});
+
+			it('when switch from months to years view mode', () => {
+				const component = utils.createDatetime({ viewMode: 'months', onViewModeChange: (viewMode) => {
+					expect(viewMode).toEqual('years');
+				}});
+				expect(utils.isMonthView(component)).toBeTruthy();
+				utils.clickOnElement(component.find('.rdtSwitch'));
+				expect(utils.isYearView(component)).toBeTruthy();
+			});
+
+			it('only when switch from years to months view mode', () => {
+				const component = utils.createDatetime({ viewMode: 'years', onViewModeChange: (viewMode) => {
+					expect(viewMode).toEqual('months');
+				}});
+				expect(utils.isYearView(component)).toBeTruthy();
+				utils.clickOnElement(component.find('.rdtSwitch'));
+				expect(utils.isYearView(component)).toBeTruthy();
+				utils.clickNthYear(component, 2);
+				expect(utils.isMonthView(component)).toBeTruthy();
+			});
+
+			it('when switch from months to days view mode', () => {
+				const component = utils.createDatetime({ viewMode: 'months', onViewModeChange: (viewMode) => {
+					expect(viewMode).toEqual('days');
+				}});
+				expect(utils.isMonthView(component)).toBeTruthy();
+				utils.clickNthMonth(component, 2);
+				expect(utils.isDayView(component)).toBeTruthy();
+			});
+		});
+
 		describe('onChange', () => {
 			it('trigger only when last selection type is selected', () => {
 				// By selection type I mean if you CAN select day, then selecting a month
@@ -934,23 +992,23 @@ describe('Datetime', () => {
 			});
 
 			it('when selecting month', () => {
-				const date = new Date(2000, 0, 15, 2, 2, 2, 2),
+				const date = Date.UTC(2000, 0, 15, 2, 2, 2, 2),
 					onChangeFn = jest.fn(),
 					component = utils.createDatetime({ defaultValue: date, dateFormat: 'YYYY-MM', onChange: onChangeFn });
 
 				utils.clickNthMonth(component, 2);
 				expect(onChangeFn).toHaveBeenCalledTimes(1);
-				expect(onChangeFn.mock.calls[0][0].toJSON()).toEqual('2000-03-15T01:02:02.002Z');
+				expect(onChangeFn.mock.calls[0][0].toJSON()).toEqual('2000-03-15T02:02:02.002Z');
 			});
 
 			it('when selecting year', () => {
-				const date = new Date(2000, 0, 15, 2, 2, 2, 2),
+				const date = Date.UTC(2000, 0, 15, 2, 2, 2, 2),
 					onChangeFn = jest.fn(),
 					component = utils.createDatetime({ defaultValue: date, dateFormat: 'YYYY', onChange: onChangeFn });
 
 				utils.clickNthYear(component, 2);
 				expect(onChangeFn).toHaveBeenCalledTimes(1);
-				expect(onChangeFn.mock.calls[0][0].toJSON()).toEqual('2001-01-15T01:02:02.002Z');
+				expect(onChangeFn.mock.calls[0][0].toJSON()).toEqual('2001-01-15T02:02:02.002Z');
 			});
 
 			it('when selecting time', () => {

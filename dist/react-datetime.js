@@ -1,5 +1,5 @@
 /*
-react-datetime v2.8.10
+react-datetime v2.10.3
 https://github.com/YouCanBookMe/react-datetime
 MIT: https://github.com/YouCanBookMe/react-datetime/raw/master/LICENSE
 */
@@ -62,36 +62,98 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var assign = __webpack_require__(1),
-	    PropTypes = __webpack_require__(2),
-	    createClass = __webpack_require__(11),
-	    moment = __webpack_require__(16),
-	    React = __webpack_require__(12),
-	    CalendarContainer = __webpack_require__(17),
-	    DefaultInputRenderer = __webpack_require__(24)
-	;
+		PropTypes = __webpack_require__(2),
+		createClass = __webpack_require__(11),
+		moment = __webpack_require__(16),
+		React = __webpack_require__(12),
+		CalendarContainer = __webpack_require__(17),
+		DefaultInputRenderer = __webpack_require__(26)
+		;
 
 	var TYPES = PropTypes;
 	var Datetime = createClass({
-	    propTypes: {
-	        // value: TYPES.object | TYPES.string,
-	        // defaultValue: TYPES.object | TYPES.string,
-	        onFocus: TYPES.func,
-	        onBlur: TYPES.func,
-	        onChange: TYPES.func,
-	        locale: TYPES.string,
-	        utc: TYPES.bool,
-	        input: TYPES.bool,
-	        // dateFormat: TYPES.string | TYPES.bool,
-	        // timeFormat: TYPES.string | TYPES.bool,
-	        inputProps: TYPES.object,
-	        timeConstraints: TYPES.object,
-	        viewMode: TYPES.oneOf(['years', 'months', 'days', 'time']),
-	        isValidDate: TYPES.func,
-	        open: TYPES.bool,
-	        strictParsing: TYPES.bool,
-	        closeOnSelect: TYPES.bool,
-	        closeOnTab: TYPES.bool
-	    },
+		propTypes: {
+			// value: TYPES.object | TYPES.string,
+			// defaultValue: TYPES.object | TYPES.string,
+			onFocus: TYPES.func,
+			onBlur: TYPES.func,
+			onChange: TYPES.func,
+			onViewModeChange: TYPES.func,
+			locale: TYPES.string,
+			utc: TYPES.bool,
+			input: TYPES.bool,
+			// dateFormat: TYPES.string | TYPES.bool,
+			// timeFormat: TYPES.string | TYPES.bool,
+			inputProps: TYPES.object,
+			timeConstraints: TYPES.object,
+			viewMode: TYPES.oneOf(['years', 'months', 'days', 'time']),
+			renderInput: DefaultInputRenderer,
+			isValidDate: TYPES.func,
+			open: TYPES.bool,
+			strictParsing: TYPES.bool,
+			closeOnSelect: TYPES.bool,
+			closeOnTab: TYPES.bool
+		},
+
+		getDefaultProps: function() {
+			var nof = function() {};
+			return {
+				className: '',
+				defaultValue: '',
+				inputProps: {},
+				input: true,
+				onFocus: nof,
+				onBlur: nof,
+				onChange: nof,
+				onViewModeChange: nof,
+				timeFormat: true,
+				timeConstraints: {},
+				dateFormat: true,
+				strictParsing: true,
+				closeOnSelect: false,
+				closeOnTab: true,
+				utc: false
+			};
+		},
+
+		getInitialState: function() {
+			var state = this.getStateFromProps( this.props );
+
+			if ( state.open === undefined )
+				state.open = !this.props.input;
+
+			state.currentView = this.props.dateFormat ? (this.props.viewMode || state.updateOn || 'days') : 'time';
+
+			return state;
+		},
+
+		getStateFromProps: function( props ) {
+			var formats = this.getFormats( props ),
+				date = props.value || props.defaultValue,
+				selectedDate, viewDate, updateOn, inputValue
+				;
+
+			if ( date && typeof date === 'string' )
+				selectedDate = this.localMoment( date, formats.datetime );
+			else if ( date )
+				selectedDate = this.localMoment( date );
+
+			if ( selectedDate && !selectedDate.isValid() )
+				selectedDate = null;
+
+			viewDate = selectedDate ?
+				selectedDate.clone().startOf('month') :
+				this.localMoment().startOf('month')
+			;
+
+			updateOn = this.getUpdateOn(formats);
+
+			if ( selectedDate )
+				inputValue = selectedDate.format(formats.datetime);
+			else if ( date.isValid && !date.isValid() )
+				inputValue = '';
+			else
+				inputValue = date || '';
 
 	    getDefaultProps: function () {
 	        var nof = function () {
@@ -115,13 +177,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	        };
 	    },
 
-	    getInitialState: function () {
-	        var state = this.getStateFromProps(this.props);
+		getUpdateOn: function( formats ) {
+			if ( formats.date.match(/[lLD]/) ) {
+				return 'days';
+			} else if ( formats.date.indexOf('M') !== -1 ) {
+				return 'months';
+			} else if ( formats.date.indexOf('Y') !== -1 ) {
+				return 'years';
+			}
 
 	        if (state.open === undefined)
 	            state.open = !this.props.input;
 
-	        state.currentView = this.props.dateFormat ? (this.props.viewMode || state.updateOn || 'days') : 'time';
+		getFormats: function( props ) {
+			var formats = {
+					date: props.dateFormat || '',
+					time: props.timeFormat || ''
+				},
+				locale = this.localMoment( props.date, null, props ).localeData()
+				;
 
 	        return state;
 	    },
@@ -205,27 +279,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return formats;
 	    },
 
-	    componentWillReceiveProps: function (nextProps) {
-	        var formats = this.getFormats(nextProps),
-	            updatedState = {}
-	        ;
+			if ( nextProps.utc !== this.props.utc ) {
+				if ( nextProps.utc ) {
+					if ( this.state.viewDate )
+						updatedState.viewDate = this.state.viewDate.clone().utc();
+					if ( this.state.selectedDate ) {
+						updatedState.selectedDate = this.state.selectedDate.clone().utc();
+						updatedState.inputValue = updatedState.selectedDate.format( formats.datetime );
+					}
+				} else {
+					if ( this.state.viewDate )
+						updatedState.viewDate = this.state.viewDate.clone().local();
+					if ( this.state.selectedDate ) {
+						updatedState.selectedDate = this.state.selectedDate.clone().local();
+						updatedState.inputValue = updatedState.selectedDate.format(formats.datetime);
+					}
+				}
+			}
+			//we should only show a valid date if we are provided a isValidDate function. Removed in 2.10.3
+			/*if (this.props.isValidDate) {
+				updatedState.viewDate = updatedState.viewDate || this.state.viewDate;
+				while (!this.props.isValidDate(updatedState.viewDate)) {
+					updatedState.viewDate = updatedState.viewDate.add(1, 'day');
+				}
+			}*/
+			this.setState( updatedState );
+		},
 
-	        if (nextProps.value !== this.props.value ||
-	            formats.datetime !== this.getFormats(this.props).datetime) {
-	            updatedState = this.getStateFromProps(nextProps);
-	        }
+		onInputChange: function( e ) {
+			var value = e.target === null ? e : e.target.value,
+				localMoment = this.localMoment( value, this.state.inputFormat ),
+				update = { inputValue: value }
+				;
 
-	        if (updatedState.open === undefined) {
-	            if (this.props.closeOnSelect && this.state.currentView !== 'time') {
-	                updatedState.open = false;
-	            } else {
-	                updatedState.open = this.state.open;
-	            }
-	        }
-
-	        if (nextProps.viewMode !== this.props.viewMode) {
-	            updatedState.currentView = nextProps.viewMode;
-	        }
+			if ( localMoment.isValid() && !this.props.value ) {
+				update.selectedDate = localMoment;
+				update.viewDate = localMoment.clone().startOf('month');
+			} else {
+				update.selectedDate = null;
+			}
 
 	        if (nextProps.locale !== this.props.locale) {
 	            if (this.state.viewDate) {
@@ -257,14 +349,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 
-	        this.setState(updatedState);
-	    },
+		showView: function( view ) {
+			var me = this;
+			return function() {
+				me.state.currentView !== view && me.props.onViewModeChange( view );
+				me.setState({ currentView: view });
+			};
+		},
 
-	    onInputChange: function (e) {
-	        var value = e.target === null ? e : e.target.value,
-	            localMoment = this.localMoment(value, this.state.inputFormat),
-	            update = {inputValue: value}
-	        ;
+		setDate: function( type ) {
+			var me = this,
+				nextViews = {
+					month: 'days',
+					year: 'months'
+				}
+			;
+			return function( e ) {
+				me.setState({
+					viewDate: me.state.viewDate.clone()[ type ]( parseInt(e.target.getAttribute('data-value'), 10) ).startOf( type ),
+					currentView: nextViews[ type ]
+				});
+				me.props.onViewModeChange( nextViews[ type ] );
+			};
+		},
 
 	        if (localMoment.isValid() && !this.props.value) {
 	            update.selectedDate = localMoment;
@@ -311,9 +418,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this.updateTime('add', amount, type, toSelected);
 	    },
 
-	    subtractTime: function (amount, type, toSelected) {
-	        return this.updateTime('subtract', amount, type, toSelected);
-	    },
+		allowedSetTime: ['hours', 'minutes', 'seconds', 'milliseconds'],
+		setTime: function( type, value ) {
+			var index = this.allowedSetTime.indexOf( type ) + 1,
+				state = this.state,
+				date = (state.selectedDate || state.viewDate).clone(),
+				nextType
+				;
 
 	    updateTime: function (op, amount, type, toSelected) {
 	        var me = this;
@@ -323,7 +434,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	                date = toSelected ? 'selectedDate' : 'viewDate'
 	            ;
 
-	            update[date] = me.state[date].clone()[op](amount, type);
+		updateSelectedDate: function( e, close ) {
+			var target = e.target,
+				modifier = 0,
+				viewDate = this.state.viewDate,
+				currentDate = this.state.selectedDate || viewDate,
+				date
+				;
+
+			if (target.className.indexOf('rdtDay') !== -1) {
+				if (target.className.indexOf('rdtNew') !== -1)
+					modifier = 1;
+				else if (target.className.indexOf('rdtOld') !== -1)
+					modifier = -1;
+
+				date = viewDate.clone()
+					.month( viewDate.month() + modifier )
+					.date( parseInt( target.getAttribute('data-value'), 10 ) );
+			} else if (target.className.indexOf('rdtMonth') !== -1) {
+				date = viewDate.clone()
+					.month( parseInt( target.getAttribute('data-value'), 10 ) )
+					.date( currentDate.date() );
+			} else if (target.className.indexOf('rdtYear') !== -1) {
+				date = viewDate.clone()
+					.month( currentDate.month() )
+					.date( currentDate.date() )
+					.year( parseInt( target.getAttribute('data-value'), 10 ) );
+			}
 
 	            me.setState(update);
 	        };
@@ -416,11 +553,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    },
 
-	    closeCalendar: function () {
-	        this.setState({open: false}, function () {
-	            this.props.onBlur(this.state.selectedDate || this.state.inputValue);
-	        });
-	    },
+		getComponentProps: function() {
+			var me = this,
+				formats = this.getFormats( this.props ),
+				props = {dateFormat: formats.date, timeFormat: formats.time}
+				;
 
 	    handleClickOutside: function () {
 	        if (this.props.input && this.state.open && !this.props.open) {
@@ -439,30 +576,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return m;
 	    },
 
-	    componentProps: {
-	        fromProps: ['value', 'isValidDate', 'renderDay', 'renderMonth', 'renderYear', 'timeConstraints'],
-	        fromState: ['viewDate', 'selectedDate', 'updateOn'],
-	        fromThis: ['setDate', 'setTime', 'showView', 'addTime', 'subtractTime', 'updateSelectedDate', 'localMoment', 'handleClickOutside']
-	    },
+		render: function() {
+			// TODO: Make a function or clean up this code,
+			// logic right now is really hard to follow
+			var className = 'rdt' + (this.props.className ?
+	                  ( Array.isArray( this.props.className ) ?
+	                  ' ' + this.props.className.join( ' ' ) : ' ' + this.props.className) : ''),
+				children = [];
 
-	    getComponentProps: function () {
-	        var me = this,
-	            formats = this.getFormats(this.props),
-	            props = {dateFormat: formats.date, timeFormat: formats.time}
-	        ;
-
-	        this.componentProps.fromProps.forEach(function (name) {
-	            props[name] = me.props[name];
-	        });
-	        this.componentProps.fromState.forEach(function (name) {
-	            props[name] = me.state[name];
-	        });
-	        this.componentProps.fromThis.forEach(function (name) {
-	            props[name] = me[name];
-	        });
-
-	        return props;
-	    },
+			if ( this.props.input ) {
+				children = [ React.createElement(this.props.renderInput, assign({
+					key: 'i',
+					type: 'text',
+					className: 'form-control',
+					openCalendar: this.openCalendar,
+					onChange: this.onInputChange,
+					onKeyDown: this.onInputKey,
+					value: this.state.inputValue
+				}, this.props.inputProps ))];
+			} else {
+				className += ' rdtStatic';
+			}
 
 	    render: function () {
 	        var DOM = React.DOM,
@@ -493,20 +627,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            className += ' rdtStatic';
 	        }
 
-	        if (this.state.open)
-	            className += ' rdtOpen';
-
-	        return DOM.div({className: className}, children.concat(
-	            DOM.div(
-	                {key: 'dt', className: 'rdtPicker'},
-	                React.createElement(CalendarContainer, {
-	                    view: this.state.currentView,
-	                    viewProps: this.getComponentProps(),
-	                    onClickOutside: this.handleClickOutside
-	                })
-	            )
-	        ));
-	    }
+			return React.createElement('div', {className: className}, children.concat(
+				React.createElement('div',
+					{ key: 'dt', className: 'rdtPicker' },
+					React.createElement( CalendarContainer, {view: this.state.currentView, viewProps: this.getComponentProps(), onClickOutside: this.handleClickOutside })
+				)
+			));
+		}
 	});
 
 	// Make moment accessible through the Datetime class
@@ -2532,13 +2659,15 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
+	'use strict';
+
 	var React = __webpack_require__(12),
-	  createClass = __webpack_require__(11),
-	  DaysView = __webpack_require__(18),
-	  MonthsView = __webpack_require__(21),
-	  YearsView = __webpack_require__(22),
-	  TimeView = __webpack_require__(23)
-	;
+		createClass = __webpack_require__(11),
+		DaysView = __webpack_require__(18),
+		MonthsView = __webpack_require__(23),
+		YearsView = __webpack_require__(24),
+		TimeView = __webpack_require__(25)
+		;
 
 	var CalendarContainer = createClass({
 		viewComponents: {
@@ -2548,9 +2677,9 @@ return /******/ (function(modules) { // webpackBootstrap
 			time: TimeView
 		},
 
-	  render: function() {
-	    return React.createElement( this.viewComponents[ this.props.view ], this.props.viewProps );
-	  }
+		render: function() {
+			return React.createElement( this.viewComponents[ this.props.view ], this.props.viewProps );
+		}
 	});
 
 	module.exports = CalendarContainer;
@@ -2563,37 +2692,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var React = __webpack_require__(12),
-	    createClass = __webpack_require__(11),
+		createClass = __webpack_require__(11),
 		moment = __webpack_require__(16),
-	  onClickOutside = __webpack_require__(19)
-	;
+		onClickOutside = __webpack_require__(19).default
+		;
 
-	var DOM = React.DOM;
 	var DateTimePickerDays = onClickOutside( createClass({
 		render: function() {
 			var footer = this.renderFooter(),
 				date = this.props.viewDate,
 				locale = date.localeData(),
 				tableChildren
-			;
+				;
 
 			tableChildren = [
-				DOM.thead({ key: 'th' }, [
-					DOM.tr({ key: 'h' }, [
-						DOM.th({ key: 'p', className: 'rdtPrev', onClick: this.props.subtractTime( 1, 'months' )}, DOM.span({}, '‹' )),
-						DOM.th({ key: 's', className: 'rdtSwitch', onClick: this.props.showView( 'months' ), colSpan: 5, 'data-value': this.props.viewDate.month() }, locale.months( date ) + ' ' + date.year() ),
-						DOM.th({ key: 'n', className: 'rdtNext', onClick: this.props.addTime( 1, 'months' )}, DOM.span({}, '›' ))
+				React.createElement('thead', { key: 'th' }, [
+					React.createElement('tr', { key: 'h' }, [
+						React.createElement('th', { key: 'p', className: 'rdtPrev', onClick: this.props.subtractTime( 1, 'months' )}, React.createElement('span', {}, '‹' )),
+						React.createElement('th', { key: 's', className: 'rdtSwitch', onClick: this.props.showView( 'months' ), colSpan: 5, 'data-value': this.props.viewDate.month() }, locale.months( date ) + ' ' + date.year() ),
+						React.createElement('th', { key: 'n', className: 'rdtNext', onClick: this.props.addTime( 1, 'months' )}, React.createElement('span', {}, '›' ))
 					]),
-					DOM.tr({ key: 'd'}, this.getDaysOfWeek( locale ).map( function( day, index ) { return DOM.th({ key: day + index, className: 'dow'}, day ); }) )
+					React.createElement('tr', { key: 'd'}, this.getDaysOfWeek( locale ).map( function( day, index ) { return React.createElement('th', { key: day + index, className: 'dow'}, day ); }) )
 				]),
-				DOM.tbody({ key: 'tb' }, this.renderDays())
+				React.createElement('tbody', { key: 'tb' }, this.renderDays())
 			];
 
 			if ( footer )
 				tableChildren.push( footer );
 
-			return DOM.div({ className: 'rdtDays' },
-				DOM.table({}, tableChildren )
+			return React.createElement('div', { className: 'rdtDays' },
+				React.createElement('table', {}, tableChildren )
 			);
 		},
 
@@ -2607,7 +2735,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				first = locale.firstDayOfWeek(),
 				dow = [],
 				i = 0
-			;
+				;
 
 			days.forEach( function( day ) {
 				dow[ (7 + ( i++ ) - first) % 7 ] = day;
@@ -2627,7 +2755,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				renderer = this.props.renderDay || this.renderDay,
 				isValid = this.props.isValidDate || this.alwaysValidDate,
 				classes, isDisabled, dayProps, currentDate
-			;
+				;
 
 			// Go to the last week of the previous month
 			prevMonth.date( prevMonth.daysInMonth() ).startOf( 'week' );
@@ -2664,7 +2792,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				days.push( renderer( dayProps, currentDate, selected ) );
 
 				if ( days.length === 7 ) {
-					weeks.push( DOM.tr({ key: prevMonth.format( 'M_D' )}, days ) );
+					weeks.push( React.createElement('tr', { key: prevMonth.format( 'M_D' )}, days ) );
 					days = [];
 				}
 
@@ -2679,7 +2807,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		},
 
 		renderDay: function( props, currentDate ) {
-			return DOM.td( props, currentDate.date() );
+			return React.createElement('td',  props, currentDate.date() );
 		},
 
 		renderFooter: function() {
@@ -2688,9 +2816,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 			var date = this.props.selectedDate || this.props.viewDate;
 
-			return DOM.tfoot({ key: 'tf'},
-				DOM.tr({},
-					DOM.td({ onClick: this.props.showView( 'time' ), colSpan: 7, className: 'rdtTimeToggle' }, date.format( this.props.timeFormat ))
+			return React.createElement('tfoot', { key: 'tf'},
+				React.createElement('tr', {},
+					React.createElement('td', { onClick: this.props.showView( 'time' ), colSpan: 7, className: 'rdtTimeToggle' }, date.format( this.props.timeFormat ))
 				)
 			);
 		},
@@ -2699,9 +2827,9 @@ return /******/ (function(modules) { // webpackBootstrap
 			return 1;
 		},
 
-	  handleClickOutside: function() {
-	    this.props.handleClickOutside();
-	  }
+		handleClickOutside: function() {
+			this.props.handleClickOutside();
+		}
 	}));
 
 	module.exports = DateTimePickerDays;
@@ -2711,316 +2839,236 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * A higher-order-component for handling onClickOutside for React components.
+	'use strict';
+
+	exports.__esModule = true;
+	exports.IGNORE_CLASS_NAME = undefined;
+	exports.default = onClickOutsideHOC;
+
+	var _react = __webpack_require__(12);
+
+	var _reactDom = __webpack_require__(20);
+
+	var _domHelpers = __webpack_require__(21);
+
+	var DOMHelpers = _interopRequireWildcard(_domHelpers);
+
+	var _uid = __webpack_require__(22);
+
+	var _uid2 = _interopRequireDefault(_uid);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var handlersMap = {};
+
+	var touchEvents = ['touchstart', 'touchmove'];
+	var IGNORE_CLASS_NAME = exports.IGNORE_CLASS_NAME = 'ignore-react-onclickoutside';
+
+	/**
+	 * This function generates the HOC function that you'll use
+	 * in order to impart onOutsideClick listening to an
+	 * arbitrary component. It gets called at the end of the
+	 * bootstrapping code to yield an instance of the
+	 * onClickOutsideHOC function defined inside setupHOC().
 	 */
-	(function(root) {
+	function onClickOutsideHOC(WrappedComponent, config) {
+	  var _class, _temp2;
 
-	  // administrative
-	  var registeredComponents = [];
-	  var handlers = [];
-	  var IGNORE_CLASS = 'ignore-react-onclickoutside';
-	  var DEFAULT_EVENTS = ['mousedown', 'touchstart'];
+	  return _temp2 = _class = function (_Component) {
+	    _inherits(onClickOutside, _Component);
 
-	  /**
-	   * Check whether some DOM node is our Component's node.
-	   */
-	  var isNodeFound = function(current, componentNode, ignoreClass) {
-	    if (current === componentNode) {
-	      return true;
-	    }
-	    // SVG <use/> elements do not technically reside in the rendered DOM, so
-	    // they do not have classList directly, but they offer a link to their
-	    // corresponding element, which can have classList. This extra check is for
-	    // that case.
-	    // See: http://www.w3.org/TR/SVG11/struct.html#InterfaceSVGUseElement
-	    // Discussion: https://github.com/Pomax/react-onclickoutside/pull/17
-	    if (current.correspondingElement) {
-	      return current.correspondingElement.classList.contains(ignoreClass);
-	    }
-	    return current.classList.contains(ignoreClass);
-	  };
+	    function onClickOutside() {
+	      var _temp, _this, _ret;
 
-	  /**
-	   * Try to find our node in a hierarchy of nodes, returning the document
-	   * node as highest noode if our node is not found in the path up.
-	   */
-	  var findHighest = function(current, componentNode, ignoreClass) {
-	    if (current === componentNode) {
-	      return true;
-	    }
+	      _classCallCheck(this, onClickOutside);
 
-	    // If source=local then this event came from 'somewhere'
-	    // inside and should be ignored. We could handle this with
-	    // a layered approach, too, but that requires going back to
-	    // thinking in terms of Dom node nesting, running counter
-	    // to React's 'you shouldn't care about the DOM' philosophy.
-	    while(current.parentNode) {
-	      if (isNodeFound(current, componentNode, ignoreClass)) {
-	        return true;
+	      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+	        args[_key] = arguments[_key];
 	      }
-	      current = current.parentNode;
-	    }
-	    return current;
-	  };
 
-	  /**
-	   * Check if the browser scrollbar was clicked
-	   */
-	  var clickedScrollbar = function(evt) {
-	    return document.documentElement.clientWidth <= evt.clientX || document.documentElement.clientHeight <= evt.clientY;
-	  };
+	      return _ret = (_temp = (_this = _possibleConstructorReturn(this, _Component.call.apply(_Component, [this].concat(args))), _this), _this.__outsideClickHandler = function (event) {
+	        if (typeof _this.__clickOutsideHandlerProp === 'function') {
+	          _this.__clickOutsideHandlerProp(event);
+	          return;
+	        }
 
-	  /**
-	   * Generate the event handler that checks whether a clicked DOM node
-	   * is inside of, or lives outside of, our Component's node tree.
-	   */
-	  var generateOutsideCheck = function(componentNode, componentInstance, eventHandler, ignoreClass, excludeScrollbar, preventDefault, stopPropagation) {
-	    return function(evt) {
-	      if (preventDefault) {
-	        evt.preventDefault();
-	      }
-	      if (stopPropagation) {
-	        evt.stopPropagation();
-	      }
-	      var current = evt.target;
-	      if((excludeScrollbar && clickedScrollbar(evt)) || (findHighest(current, componentNode, ignoreClass) !== document)) {
-	        return;
-	      }
-	      eventHandler(evt);
-	    };
-	  };
+	        var instance = _this.getInstance();
 
-	  /**
-	   * This function generates the HOC function that you'll use
-	   * in order to impart onOutsideClick listening to an
-	   * arbitrary component. It gets called at the end of the
-	   * bootstrapping code to yield an instance of the
-	   * onClickOutsideHOC function defined inside setupHOC().
-	   */
-	  function setupHOC(root, React, ReactDOM, createReactClass) {
+	        if (typeof instance.props.handleClickOutside === 'function') {
+	          instance.props.handleClickOutside(event);
+	          return;
+	        }
 
-	    // The actual Component-wrapping HOC:
-	    return function onClickOutsideHOC(Component, config) {
-	      var wrapComponentWithOnClickOutsideHandling = createReactClass({
-	        statics: {
-	          /**
-	           * Access the wrapped Component's class.
-	           */
-	          getClass: function() {
-	            if (Component.getClass) {
-	              return Component.getClass();
-	            }
-	            return Component;
+	        if (typeof instance.handleClickOutside === 'function') {
+	          instance.handleClickOutside(event);
+	          return;
+	        }
+
+	        throw new Error('WrappedComponent lacks a handleClickOutside(event) function for processing outside click events.');
+	      }, _this.enableOnClickOutside = function () {
+	        if (typeof document === 'undefined') return;
+
+	        var events = _this.props.eventTypes;
+	        if (!events.forEach) {
+	          events = [events];
+	        }
+
+	        handlersMap[_this._uid] = function (event) {
+	          if (_this.props.disableOnClickOutside) return;
+	          if (_this.componentNode === null) return;
+
+	          if (_this.props.preventDefault) {
+	            event.preventDefault();
 	          }
-	        },
 
-	        /**
-	         * Access the wrapped Component's instance.
-	         */
-	        getInstance: function() {
-	          return Component.prototype.isReactComponent ? this.refs.instance : this;
-	        },
+	          if (_this.props.stopPropagation) {
+	            event.stopPropagation();
+	          }
 
-	        // this is given meaning in componentDidMount
-	        __outsideClickHandler: function() {},
+	          if (_this.props.excludeScrollbar && DOMHelpers.clickedScrollbar(event)) return;
 
-	        getDefaultProps: function() {
-	          return {
-	            excludeScrollbar: config && config.excludeScrollbar
-	          };
-	        },
+	          var current = event.target;
 
-	        /**
-	         * Add click listeners to the current document,
-	         * linked to this component's state.
-	         */
-	        componentDidMount: function() {
-	          // If we are in an environment without a DOM such
-	          // as shallow rendering or snapshots then we exit
-	          // early to prevent any unhandled errors being thrown.
-	          if (typeof document === 'undefined' || !document.createElement){
+	          if (DOMHelpers.findHighest(current, _this.componentNode, _this.props.outsideClickIgnoreClass) !== document) {
 	            return;
 	          }
 
-	          var instance = this.getInstance();
-	          var clickOutsideHandler;
+	          _this.__outsideClickHandler(event);
+	        };
 
-	          if(config && typeof config.handleClickOutside === 'function') {
-	            clickOutsideHandler = config.handleClickOutside(instance);
-	            if(typeof clickOutsideHandler !== 'function') {
-	              throw new Error('Component lacks a function for processing outside click events specified by the handleClickOutside config option.');
-	            }
-	          } else if(typeof instance.handleClickOutside === 'function') {
-	            if (React.Component.prototype.isPrototypeOf(instance)) {
-	              clickOutsideHandler = instance.handleClickOutside.bind(instance);
-	            } else {
-	              clickOutsideHandler = instance.handleClickOutside;
-	            }
-	          } else if(typeof instance.props.handleClickOutside === 'function') {
-	            clickOutsideHandler = instance.props.handleClickOutside;
-	          } else {
-	            throw new Error('Component lacks a handleClickOutside(event) function for processing outside click events.');
+	        events.forEach(function (eventName) {
+	          var handlerOptions = null;
+	          var isTouchEvent = touchEvents.indexOf(eventName) !== -1;
+
+	          if (isTouchEvent) {
+	            handlerOptions = { passive: !_this.props.preventDefault };
 	          }
 
-	          var componentNode = ReactDOM.findDOMNode(instance);
-	          if (componentNode === null) {
-	            console.warn('Antipattern warning: there was no DOM node associated with the component that is being wrapped by outsideClick.');
-	            console.warn([
-	              'This is typically caused by having a component that starts life with a render function that',
-	              'returns `null` (due to a state or props value), so that the component \'exist\' in the React',
-	              'chain of components, but not in the DOM.\n\nInstead, you need to refactor your code so that the',
-	              'decision of whether or not to show your component is handled by the parent, in their render()',
-	              'function.\n\nIn code, rather than:\n\n  A{render(){return check? <.../> : null;}\n  B{render(){<A check=... />}\n\nmake sure that you',
-	              'use:\n\n  A{render(){return <.../>}\n  B{render(){return <...>{ check ? <A/> : null }<...>}}\n\nThat is:',
-	              'the parent is always responsible for deciding whether or not to render any of its children.',
-	              'It is not the child\'s responsibility to decide whether a render instruction from above should',
-	              'get ignored or not by returning `null`.\n\nWhen any component gets its render() function called,',
-	              'that is the signal that it should be rendering its part of the UI. It may in turn decide not to',
-	              'render all of *its* children, but it should never return `null` for itself. It is not responsible',
-	              'for that decision.'
-	            ].join(' '));
+	          document.addEventListener(eventName, handlersMap[_this._uid], handlerOptions);
+	        });
+	      }, _this.disableOnClickOutside = function () {
+	        var fn = handlersMap[_this._uid];
+	        if (fn && typeof document !== 'undefined') {
+	          var events = _this.props.eventTypes;
+	          if (!events.forEach) {
+	            events = [events];
 	          }
-
-	          var fn = this.__outsideClickHandler = generateOutsideCheck(
-	            componentNode,
-	            instance,
-	            clickOutsideHandler,
-	            this.props.outsideClickIgnoreClass || IGNORE_CLASS,
-	            this.props.excludeScrollbar, // fallback not needed, prop always exists because of getDefaultProps
-	            this.props.preventDefault || false,
-	            this.props.stopPropagation || false
-	          );
-
-	          var pos = registeredComponents.length;
-	          registeredComponents.push(this);
-	          handlers[pos] = fn;
-
-	          // If there is a truthy disableOnClickOutside property for this
-	          // component, don't immediately start listening for outside events.
-	          if (!this.props.disableOnClickOutside) {
-	            this.enableOnClickOutside();
-	          }
-	        },
-
-	        /**
-	        * Track for disableOnClickOutside props changes and enable/disable click outside
-	        */
-	        componentWillReceiveProps: function(nextProps) {
-	          if (this.props.disableOnClickOutside && !nextProps.disableOnClickOutside) {
-	            this.enableOnClickOutside();
-	          } else if (!this.props.disableOnClickOutside && nextProps.disableOnClickOutside) {
-	            this.disableOnClickOutside();
-	          }
-	        },
-
-	        /**
-	         * Remove the document's event listeners
-	         */
-	        componentWillUnmount: function() {
-	          this.disableOnClickOutside();
-	          this.__outsideClickHandler = false;
-	          var pos = registeredComponents.indexOf(this);
-	          if( pos>-1) {
-	            // clean up so we don't leak memory
-	            if (handlers[pos]) { handlers.splice(pos, 1); }
-	            registeredComponents.splice(pos, 1);
-	          }
-	        },
-
-	        /**
-	         * Can be called to explicitly enable event listening
-	         * for clicks and touches outside of this element.
-	         */
-	        enableOnClickOutside: function() {
-	          var fn = this.__outsideClickHandler;
-	          if (typeof document !== 'undefined') {
-	            var events = this.props.eventTypes || DEFAULT_EVENTS;
-	            if (!events.forEach) {
-	              events = [events];
-	            }
-	            events.forEach(function (eventName) {
-	              document.addEventListener(eventName, fn);
-	            });
-	          }
-	        },
-
-	        /**
-	         * Can be called to explicitly disable event listening
-	         * for clicks and touches outside of this element.
-	         */
-	        disableOnClickOutside: function() {
-	          var fn = this.__outsideClickHandler;
-	          if (typeof document !== 'undefined') {
-	            var events = this.props.eventTypes || DEFAULT_EVENTS;
-	            if (!events.forEach) {
-	              events = [events];
-	            }
-	            events.forEach(function (eventName) {
-	              document.removeEventListener(eventName, fn);
-	            });
-	          }
-	        },
-
-	        /**
-	         * Pass-through render
-	         */
-	        render: function() {
-	          var passedProps = this.props;
-	          var props = {};
-	          Object.keys(this.props).forEach(function(key) {
-	            if (key !== 'excludeScrollbar') {
-	              props[key] = passedProps[key];
-	            }
+	          events.forEach(function (eventName) {
+	            return document.removeEventListener(eventName, fn);
 	          });
-	          if (Component.prototype.isReactComponent) {
-	            props.ref = 'instance';
-	          }
-	          props.disableOnClickOutside = this.disableOnClickOutside;
-	          props.enableOnClickOutside = this.enableOnClickOutside;
-	          return React.createElement(Component, props);
+	          delete handlersMap[_this._uid];
 	        }
-	      });
-
-	      // Add display name for React devtools
-	      (function bindWrappedComponentName(c, wrapper) {
-	        var componentName = c.displayName || c.name || 'Component';
-	        wrapper.displayName = 'OnClickOutside(' + componentName + ')';
-	      }(Component, wrapComponentWithOnClickOutsideHandling));
-
-	      return wrapComponentWithOnClickOutsideHandling;
-	    };
-	  }
-
-	  /**
-	   * This function sets up the library in ways that
-	   * work with the various modulde loading solutions
-	   * used in JavaScript land today.
-	   */
-	  function setupBinding(root, factory) {
-	    if (true) {
-	      // AMD. Register as an anonymous module.
-	      !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12),__webpack_require__(20),__webpack_require__(11)], __WEBPACK_AMD_DEFINE_RESULT__ = function(React, ReactDom, createReactClass) {
-	        if (!createReactClass) createReactClass = React.createClass;
-	        return factory(root, React, ReactDom, createReactClass);
-	      }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	    } else if (typeof exports === 'object') {
-	      // Node. Note that this does not work with strict
-	      // CommonJS, but only CommonJS-like environments
-	      // that support module.exports
-	      module.exports = factory(root, require('react'), require('react-dom'), require('create-react-class'));
-	    } else {
-	      // Browser globals (root is window)
-	      var createReactClass = React.createClass ? React.createClass : window.createReactClass;
-	      root.onClickOutside = factory(root, React, ReactDOM, createReactClass);
+	      }, _this.getRef = function (ref) {
+	        return _this.instanceRef = ref;
+	      }, _temp), _possibleConstructorReturn(_this, _ret);
 	    }
-	  }
 
-	  // Make it all happen
-	  setupBinding(root, setupHOC);
+	    /**
+	     * Access the WrappedComponent's instance.
+	     */
+	    onClickOutside.prototype.getInstance = function getInstance() {
+	      if (!WrappedComponent.prototype.isReactComponent) {
+	        return this;
+	      }
+	      var ref = this.instanceRef;
+	      return ref.getInstance ? ref.getInstance() : ref;
+	    };
 
-	}(this));
+	    /**
+	     * Add click listeners to the current document,
+	     * linked to this component's state.
+	     */
+	    onClickOutside.prototype.componentDidMount = function componentDidMount() {
+	      this._uid = (0, _uid2.default)();
+	      // If we are in an environment without a DOM such
+	      // as shallow rendering or snapshots then we exit
+	      // early to prevent any unhandled errors being thrown.
+	      if (typeof document === 'undefined' || !document.createElement) {
+	        return;
+	      }
 
+	      var instance = this.getInstance();
+
+	      if (config && typeof config.handleClickOutside === 'function') {
+	        this.__clickOutsideHandlerProp = config.handleClickOutside(instance);
+	        if (typeof this.__clickOutsideHandlerProp !== 'function') {
+	          throw new Error('WrappedComponent lacks a function for processing outside click events specified by the handleClickOutside config option.');
+	        }
+	      }
+
+	      this.componentNode = (0, _reactDom.findDOMNode)(this.getInstance());
+	      this.enableOnClickOutside();
+	    };
+
+	    onClickOutside.prototype.componentDidUpdate = function componentDidUpdate() {
+	      this.componentNode = (0, _reactDom.findDOMNode)(this.getInstance());
+	    };
+
+	    /**
+	     * Remove all document's event listeners for this component
+	     */
+
+
+	    onClickOutside.prototype.componentWillUnmount = function componentWillUnmount() {
+	      this.disableOnClickOutside();
+	    };
+
+	    /**
+	     * Can be called to explicitly enable event listening
+	     * for clicks and touches outside of this element.
+	     */
+
+
+	    /**
+	     * Can be called to explicitly disable event listening
+	     * for clicks and touches outside of this element.
+	     */
+
+
+	    /**
+	     * Pass-through render
+	     */
+	    onClickOutside.prototype.render = function render() {
+	      var _this2 = this;
+
+	      var props = Object.keys(this.props).filter(function (prop) {
+	        return prop !== 'excludeScrollbar';
+	      }).reduce(function (props, prop) {
+	        props[prop] = _this2.props[prop];
+	        return props;
+	      }, {});
+
+	      if (WrappedComponent.prototype.isReactComponent) {
+	        props.ref = this.getRef;
+	      } else {
+	        props.wrappedRef = this.getRef;
+	      }
+
+	      props.disableOnClickOutside = this.disableOnClickOutside;
+	      props.enableOnClickOutside = this.enableOnClickOutside;
+
+	      return (0, _react.createElement)(WrappedComponent, props);
+	    };
+
+	    return onClickOutside;
+	  }(_react.Component), _class.displayName = 'OnClickOutside(' + (WrappedComponent.displayName || WrappedComponent.name || 'Component') + ')', _class.defaultProps = {
+	    eventTypes: ['mousedown', 'touchstart'],
+	    excludeScrollbar: config && config.excludeScrollbar || false,
+	    outsideClickIgnoreClass: IGNORE_CLASS_NAME,
+	    preventDefault: false,
+	    stopPropagation: false
+	  }, _class.getClass = function () {
+	    return WrappedComponent.getClass ? WrappedComponent.getClass() : WrappedComponent;
+	  }, _temp2;
+	}
 
 /***/ }),
 /* 20 */
@@ -3030,25 +3078,100 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 21 */
+/***/ (function(module, exports) {
+
+	"use strict";
+
+	exports.__esModule = true;
+	exports.isNodeFound = isNodeFound;
+	exports.findHighest = findHighest;
+	exports.clickedScrollbar = clickedScrollbar;
+	/**
+	 * Check whether some DOM node is our Component's node.
+	 */
+	function isNodeFound(current, componentNode, ignoreClass) {
+	  if (current === componentNode) {
+	    return true;
+	  }
+	  // SVG <use/> elements do not technically reside in the rendered DOM, so
+	  // they do not have classList directly, but they offer a link to their
+	  // corresponding element, which can have classList. This extra check is for
+	  // that case.
+	  // See: http://www.w3.org/TR/SVG11/struct.html#InterfaceSVGUseElement
+	  // Discussion: https://github.com/Pomax/react-onclickoutside/pull/17
+	  if (current.correspondingElement) {
+	    return current.correspondingElement.classList.contains(ignoreClass);
+	  }
+	  return current.classList.contains(ignoreClass);
+	}
+
+	/**
+	 * Try to find our node in a hierarchy of nodes, returning the document
+	 * node as highest node if our node is not found in the path up.
+	 */
+	function findHighest(current, componentNode, ignoreClass) {
+	  if (current === componentNode) {
+	    return true;
+	  }
+
+	  // If source=local then this event came from 'somewhere'
+	  // inside and should be ignored. We could handle this with
+	  // a layered approach, too, but that requires going back to
+	  // thinking in terms of Dom node nesting, running counter
+	  // to React's 'you shouldn't care about the DOM' philosophy.
+	  while (current.parentNode) {
+	    if (isNodeFound(current, componentNode, ignoreClass)) {
+	      return true;
+	    }
+	    current = current.parentNode;
+	  }
+	  return current;
+	}
+
+	/**
+	 * Check if the browser scrollbar was clicked
+	 */
+	function clickedScrollbar(evt) {
+	  return document.documentElement.clientWidth <= evt.clientX || document.documentElement.clientHeight <= evt.clientY;
+	}
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports) {
+
+	"use strict";
+
+	exports.__esModule = true;
+	function autoInc() {
+	  var seed = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+
+	  return function () {
+	    return ++seed;
+	  };
+	}
+
+	exports.default = autoInc();
+
+/***/ }),
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(12),
-	    createClass = __webpack_require__(11),
-		onClickOutside = __webpack_require__(19)
-	;
+		createClass = __webpack_require__(11),
+		onClickOutside = __webpack_require__(19).default
+		;
 
-	var DOM = React.DOM;
 	var DateTimePickerMonths = onClickOutside( createClass({
 		render: function() {
-			return DOM.div({ className: 'rdtMonths' }, [
-				DOM.table({ key: 'a' }, DOM.thead( {}, DOM.tr( {}, [
-					DOM.th({ key: 'prev', className: 'rdtPrev', onClick: this.props.subtractTime( 1, 'years' )}, DOM.span({}, '‹' )),
-					DOM.th({ key: 'year', className: 'rdtSwitch', onClick: this.props.showView( 'years' ), colSpan: 2, 'data-value': this.props.viewDate.year() }, this.props.viewDate.year() ),
-					DOM.th({ key: 'next', className: 'rdtNext', onClick: this.props.addTime( 1, 'years' )}, DOM.span({}, '›' ))
+			return React.createElement('div', { className: 'rdtMonths' }, [
+				React.createElement('table', { key: 'a' }, React.createElement('thead', {}, React.createElement('tr', {}, [
+					React.createElement('th', { key: 'prev', className: 'rdtPrev', onClick: this.props.subtractTime( 1, 'years' )}, React.createElement('span', {}, '‹' )),
+					React.createElement('th', { key: 'year', className: 'rdtSwitch', onClick: this.props.showView( 'years' ), colSpan: 2, 'data-value': this.props.viewDate.year() }, this.props.viewDate.year() ),
+					React.createElement('th', { key: 'next', className: 'rdtNext', onClick: this.props.addTime( 1, 'years' )}, React.createElement('span', {}, '›' ))
 				]))),
-				DOM.table({ key: 'months' }, DOM.tbody({ key: 'b' }, this.renderMonths()))
+				React.createElement('table', { key: 'months' }, React.createElement('tbody', { key: 'b' }, this.renderMonths()))
 			]);
 		},
 
@@ -3064,7 +3187,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				classes, props, currentMonth, isDisabled, noOfDaysInMonth, daysInMonth, validDay,
 				// Date is irrelevant because we're only interested in month
 				irrelevantDate = 1
-			;
+				;
 
 			while (i < 12) {
 				classes = 'rdtMonth';
@@ -3102,7 +3225,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				months.push( renderer( props, i, year, date && date.clone() ) );
 
 				if ( months.length === 4 ) {
-					rows.push( DOM.tr({ key: month + '_' + rows.length }, months ) );
+					rows.push( React.createElement('tr', { key: month + '_' + rows.length }, months ) );
 					months = [];
 				}
 
@@ -3123,16 +3246,16 @@ return /******/ (function(modules) { // webpackBootstrap
 			// Because some months are up to 5 characters long, we want to
 			// use a fixed string length for consistency
 			var monthStrFixedLength = monthStr.substring( 0, strLength );
-			return DOM.td( props, capitalize( monthStrFixedLength ) );
+			return React.createElement('td', props, capitalize( monthStrFixedLength ) );
 		},
 
 		alwaysValidDate: function() {
 			return 1;
 		},
 
-	  handleClickOutside: function() {
-	    this.props.handleClickOutside();
-	  }
+		handleClickOutside: function() {
+			this.props.handleClickOutside();
+		}
 	}));
 
 	function capitalize( str ) {
@@ -3143,28 +3266,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ }),
-/* 22 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(12),
-	    createClass = __webpack_require__(11),
-		onClickOutside = __webpack_require__(19)
-	;
+		createClass = __webpack_require__(11),
+		onClickOutside = __webpack_require__(19).default
+		;
 
-	var DOM = React.DOM;
 	var DateTimePickerYears = onClickOutside( createClass({
 		render: function() {
 			var year = parseInt( this.props.viewDate.year() / 10, 10 ) * 10;
 
-			return DOM.div({ className: 'rdtYears' }, [
-				DOM.table({ key: 'a' }, DOM.thead({}, DOM.tr({}, [
-					DOM.th({ key: 'prev', className: 'rdtPrev', onClick: this.props.subtractTime( 10, 'years' )}, DOM.span({}, '‹' )),
-					DOM.th({ key: 'year', className: 'rdtSwitch', onClick: this.props.showView( 'years' ), colSpan: 2 }, year + '-' + ( year + 9 ) ),
-					DOM.th({ key: 'next', className: 'rdtNext', onClick: this.props.addTime( 10, 'years' )}, DOM.span({}, '›' ))
-					]))),
-				DOM.table({ key: 'years' }, DOM.tbody( {}, this.renderYears( year )))
+			return React.createElement('div', { className: 'rdtYears' }, [
+				React.createElement('table', { key: 'a' }, React.createElement('thead', {}, React.createElement('tr', {}, [
+					React.createElement('th', { key: 'prev', className: 'rdtPrev', onClick: this.props.subtractTime( 10, 'years' )}, React.createElement('span', {}, '‹' )),
+					React.createElement('th', { key: 'year', className: 'rdtSwitch', onClick: this.props.showView( 'years' ), colSpan: 2 }, year + '-' + ( year + 9 ) ),
+					React.createElement('th', { key: 'next', className: 'rdtNext', onClick: this.props.addTime( 10, 'years' )}, React.createElement('span', {}, '›' ))
+				]))),
+				React.createElement('table', { key: 'years' }, React.createElement('tbody',  {}, this.renderYears( year )))
 			]);
 		},
 
@@ -3180,7 +3302,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				// we're only interested in the year
 				irrelevantMonth = 0,
 				irrelevantDate = 1
-			;
+				;
 
 			year--;
 			while (i < 11) {
@@ -3223,7 +3345,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				years.push( renderer( props, year, selectedDate && selectedDate.clone() ));
 
 				if ( years.length === 4 ) {
-					rows.push( DOM.tr({ key: i }, years ) );
+					rows.push( React.createElement('tr', { key: i }, years ) );
 					years = [];
 				}
 
@@ -3239,34 +3361,33 @@ return /******/ (function(modules) { // webpackBootstrap
 		},
 
 		renderYear: function( props, year ) {
-			return DOM.td( props, year );
+			return React.createElement('td',  props, year );
 		},
 
 		alwaysValidDate: function() {
 			return 1;
 		},
 
-	  handleClickOutside: function() {
-	    this.props.handleClickOutside();
-	  }
+		handleClickOutside: function() {
+			this.props.handleClickOutside();
+		}
 	}));
 
 	module.exports = DateTimePickerYears;
 
 
 /***/ }),
-/* 23 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var React = __webpack_require__(12),
-	    createClass = __webpack_require__(11),
+		createClass = __webpack_require__(11),
 		assign = __webpack_require__(1),
-	  onClickOutside = __webpack_require__(19)
-	;
+		onClickOutside = __webpack_require__(19).default
+		;
 
-	var DOM = React.DOM;
 	var DateTimePickerTime = onClickOutside( createClass({
 		getInitialState: function() {
 			return this.calculateState( this.props );
@@ -3276,7 +3397,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			var date = props.selectedDate || props.viewDate,
 				format = props.timeFormat,
 				counters = []
-			;
+				;
 
 			if ( format.toLowerCase().indexOf('h') !== -1 ) {
 				counters.push('hours');
@@ -3317,20 +3438,20 @@ return /******/ (function(modules) { // webpackBootstrap
 						value = 12;
 					}
 				}
-				return DOM.div({ key: type, className: 'rdtCounter' }, [
-					DOM.span({ key: 'up', className: 'rdtBtn', onMouseDown: this.onStartClicking( 'increase', type ) }, '▲' ),
-					DOM.div({ key: 'c', className: 'rdtCount' }, value ),
-					DOM.span({ key: 'do', className: 'rdtBtn', onMouseDown: this.onStartClicking( 'decrease', type ) }, '▼' )
+				return React.createElement('div', { key: type, className: 'rdtCounter' }, [
+					React.createElement('span', { key: 'up', className: 'rdtBtn', onMouseDown: this.onStartClicking( 'increase', type ) }, '▲' ),
+					React.createElement('div', { key: 'c', className: 'rdtCount' }, value ),
+					React.createElement('span', { key: 'do', className: 'rdtBtn', onMouseDown: this.onStartClicking( 'decrease', type ) }, '▼' )
 				]);
 			}
 			return '';
 		},
 
 		renderDayPart: function() {
-			return DOM.div({ key: 'dayPart', className: 'rdtCounter' }, [
-				DOM.span({ key: 'up', className: 'rdtBtn', onMouseDown: this.onStartClicking( 'toggleDayPart', 'hours') }, '▲' ),
-				DOM.div({ key: this.state.daypart, className: 'rdtCount' }, this.state.daypart ),
-				DOM.span({ key: 'do', className: 'rdtBtn', onMouseDown: this.onStartClicking( 'toggleDayPart', 'hours') }, '▼' )
+			return React.createElement('div', { key: 'dayPart', className: 'rdtCounter' }, [
+				React.createElement('span', { key: 'up', className: 'rdtBtn', onMouseDown: this.onStartClicking( 'toggleDayPart', 'hours') }, '▲' ),
+				React.createElement('div', { key: this.state.daypart, className: 'rdtCount' }, this.state.daypart ),
+				React.createElement('span', { key: 'do', className: 'rdtBtn', onMouseDown: this.onStartClicking( 'toggleDayPart', 'hours') }, '▼' )
 			]);
 		},
 
@@ -3341,7 +3462,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 			this.state.counters.forEach( function( c ) {
 				if ( counters.length )
-					counters.push( DOM.div({ key: 'sep' + counters.length, className: 'rdtCounterSeparator' }, ':' ) );
+					counters.push( React.createElement('div', { key: 'sep' + counters.length, className: 'rdtCounterSeparator' }, ':' ) );
 				counters.push( me.renderCounter( c ) );
 			});
 
@@ -3350,19 +3471,19 @@ return /******/ (function(modules) { // webpackBootstrap
 			}
 
 			if ( this.state.counters.length === 3 && this.props.timeFormat.indexOf( 'S' ) !== -1 ) {
-				counters.push( DOM.div({ className: 'rdtCounterSeparator', key: 'sep5' }, ':' ) );
+				counters.push( React.createElement('div', { className: 'rdtCounterSeparator', key: 'sep5' }, ':' ) );
 				counters.push(
-					DOM.div({ className: 'rdtCounter rdtMilli', key: 'm' },
-						DOM.input({ value: this.state.milliseconds, type: 'text', onChange: this.updateMilli } )
+					React.createElement('div', { className: 'rdtCounter rdtMilli', key: 'm' },
+						React.createElement('input', { value: this.state.milliseconds, type: 'text', onChange: this.updateMilli } )
 						)
 					);
 			}
 
-			return DOM.div({ className: 'rdtTime' },
-				DOM.table({}, [
+			return React.createElement('div', { className: 'rdtTime' },
+				React.createElement('table', {}, [
 					this.renderHeader(),
-					DOM.tbody({ key: 'b'}, DOM.tr({}, DOM.td({},
-						DOM.div({ className: 'rdtCounters' }, counters )
+					React.createElement('tbody', { key: 'b'}, React.createElement('tr', {}, React.createElement('td', {},
+						React.createElement('div', { className: 'rdtCounters' }, counters )
 					)))
 				])
 			);
@@ -3415,8 +3536,8 @@ return /******/ (function(modules) { // webpackBootstrap
 				return null;
 
 			var date = this.props.selectedDate || this.props.viewDate;
-			return DOM.thead({ key: 'h' }, DOM.tr({},
-				DOM.th({ className: 'rdtSwitch', colSpan: 4, onClick: this.props.showView( 'days' ) }, date.format( this.props.dateFormat ) )
+			return React.createElement('thead', { key: 'h' }, React.createElement('tr', {},
+				React.createElement('th', { className: 'rdtSwitch', colSpan: 4, onClick: this.props.showView( 'days' ) }, date.format( this.props.dateFormat ) )
 			));
 		},
 
@@ -3481,61 +3602,58 @@ return /******/ (function(modules) { // webpackBootstrap
 			return str;
 		},
 
-	  handleClickOutside: function() {
-	    this.props.handleClickOutside();
-	  }
+		handleClickOutside: function() {
+			this.props.handleClickOutside();
+		}
 	}));
 
 	module.exports = DateTimePickerTime;
 
 
 /***/ }),
-/* 24 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(12),
-	    _ = __webpack_require__(25),
-	    createClass = __webpack_require__(11);
+		_ = __webpack_require__(27),
+		createClass = __webpack_require__(11);
 
 	var DefaultInputRenderer = createClass({
-	    focus: function () {
-	        if (this.inputRef) {
-	            this.inputRef.focus();
-	        }
-	    },
-	    onFocusHandler: function () {
-	        this.props.openCalendar();
+		focus: function () {
+			if (this.inputRef) {
+				this.inputRef.focus();
+			}
+		},
+		onFocusHandler: function () {
+			this.props.openCalendar();
 
-	        if (this.props.onFocus) {
-	            this.props.onFocus();
-	        }
-	    },
-	    onRefHandler: function (inputRef) {
-	        this.inputRef = inputRef;
-	    },
-	    render: function () {
-	        return React.createElement(
-	            'input',
-	            _.assign(
-	                {
-	                    className: 'form-control',
-	                    type: 'text'
-	                },
-	                _.omit(this.props, 'openCalendar'),
-	                {
-	                    onFocus: this.onFocusHandler,
-	                    ref: this.onRefHandler
-	                }
-	            )
-	        );
-	    }
+			if (this.props.onFocus) {
+				this.props.onFocus();
+			}
+		},
+		onRefHandler: function (inputRef) {
+			this.inputRef = inputRef;
+		},
+		render: function () {
+			return React.createElement(
+				'input',
+				_.assign(
+					{},
+					_.omit(this.props, 'openCalendar'),
+					{
+						onFocus: this.onFocusHandler,
+						ref: this.onRefHandler
+					}
+				)
+			);
+		}
 	});
 
 	module.exports = DefaultInputRenderer;
 
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, module) {/**
@@ -20623,10 +20741,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}.call(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(26)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(28)(module)))
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ (function(module, exports) {
 
 	module.exports = function(module) {
