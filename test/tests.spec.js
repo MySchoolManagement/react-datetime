@@ -9,7 +9,7 @@ describe('Datetime', () => {
 		const component = utils.createDatetime({});
 
 		expect(component).toBeDefined();
-		expect(component.find('.rdt .form-control').length).toEqual(1);
+		expect(component.find('.rdt > .form-control').length).toEqual(1);
 		expect(component.find('.rdt > .rdtPicker').length).toEqual(1);
 	});
 
@@ -281,7 +281,7 @@ describe('Datetime', () => {
 	describe('with custom props', () => {
 		it('input=false', () => {
 			const component = utils.createDatetime({ input: false });
-			expect(component.find('.rdt .form-control').length).toEqual(0);
+			expect(component.find('.rdt > .form-control').length).toEqual(0);
 			expect(component.find('.rdt > .rdtPicker').length).toEqual(1);
 		});
 

@@ -78,7 +78,6 @@
   },
   "dependencies": {
     "create-react-class": "^15.5.2",
-    "lodash": "^4.17.4",
     "object-assign": "^3.0.0",
     "prop-types": "^15.5.7",
     "react-onclickoutside": "^6.5.0"
