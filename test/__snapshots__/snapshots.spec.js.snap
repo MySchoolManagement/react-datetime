@@ -4,6 +4,7 @@ exports[`dateFormat set to false 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -22,6 +23,7 @@ exports[`dateFormat set to false 1`] = `
                   className="rdtCounter">
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▲
                   </span>
@@ -31,6 +33,7 @@ exports[`dateFormat set to false 1`] = `
                   </div>
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▼
                   </span>
@@ -43,6 +46,7 @@ exports[`dateFormat set to false 1`] = `
                   className="rdtCounter">
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▲
                   </span>
@@ -52,6 +56,7 @@ exports[`dateFormat set to false 1`] = `
                   </div>
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▼
                   </span>
@@ -60,6 +65,7 @@ exports[`dateFormat set to false 1`] = `
                   className="rdtCounter">
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▲
                   </span>
@@ -69,6 +75,7 @@ exports[`dateFormat set to false 1`] = `
                   </div>
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▼
                   </span>
@@ -89,6 +96,7 @@ exports[`dateFormat set to true 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -786,6 +794,7 @@ exports[`input input: set to true 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -1138,6 +1147,7 @@ exports[`inputProps with className specified 1`] = `
   <input
     className="arbitrary-className"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -1491,6 +1501,7 @@ exports[`inputProps with disabled specified 1`] = `
     className="form-control"
     disabled={true}
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -1844,6 +1855,7 @@ exports[`inputProps with name specified 1`] = `
     className="form-control"
     name="arbitrary-name"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -2196,6 +2208,7 @@ exports[`inputProps with placeholder specified 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     placeholder="arbitrary-placeholder"
@@ -2549,6 +2562,7 @@ exports[`inputProps with required specified 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     required={true}
@@ -2902,6 +2916,7 @@ exports[`open set to false 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -3254,6 +3269,7 @@ exports[`open set to true 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -3606,6 +3622,7 @@ exports[`test className: set to arbitraty value 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -3958,6 +3975,7 @@ exports[`test defaultValue: set to arbitrary value 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -4310,6 +4328,7 @@ exports[`test everything default: renders correctly 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -4662,6 +4681,7 @@ exports[`test isValidDate: only valid if after yesterday 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -4989,6 +5009,7 @@ exports[`test renderDay: specified 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -5341,6 +5362,7 @@ exports[`test renderMonth: specified 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -5693,6 +5715,7 @@ exports[`test renderYear: specified 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -6045,6 +6068,7 @@ exports[`test value: set to arbitrary value 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -6397,6 +6421,7 @@ exports[`timeFormat set to false 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -6739,6 +6764,7 @@ exports[`timeFormat set to true 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -7091,6 +7117,7 @@ exports[`viewMode set to days 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -7443,6 +7470,7 @@ exports[`viewMode set to months 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -7571,6 +7599,7 @@ exports[`viewMode set to time 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
@@ -7599,6 +7628,7 @@ exports[`viewMode set to time 1`] = `
                   className="rdtCounter">
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▲
                   </span>
@@ -7608,6 +7638,7 @@ exports[`viewMode set to time 1`] = `
                   </div>
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▼
                   </span>
@@ -7620,6 +7651,7 @@ exports[`viewMode set to time 1`] = `
                   className="rdtCounter">
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▲
                   </span>
@@ -7629,6 +7661,7 @@ exports[`viewMode set to time 1`] = `
                   </div>
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▼
                   </span>
@@ -7637,6 +7670,7 @@ exports[`viewMode set to time 1`] = `
                   className="rdtCounter">
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▲
                   </span>
@@ -7646,6 +7680,7 @@ exports[`viewMode set to time 1`] = `
                   </div>
                   <span
                     className="rdtBtn"
+                    onContextMenu={[Function]}
                     onMouseDown={[Function]}>
                     ▼
                   </span>
@@ -7666,6 +7701,7 @@ exports[`viewMode set to years 1`] = `
   <input
     className="form-control"
     onChange={[Function]}
+    onClick={[Function]}
     onFocus={[Function]}
     onKeyDown={[Function]}
     type="text"
