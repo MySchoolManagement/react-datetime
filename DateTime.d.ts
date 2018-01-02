@@ -28,11 +28,6 @@ declare namespace ReactDatetimeClass {
         milliseconds?: TimeConstraint;
     }
 
-
-    interface InputRendererComponentProps {
-        readonly openCalendar?: () => void
-    }
-
     type EventOrValueHandler<Event> = (event: Event | Moment | string) => void;
 
     export interface DatetimepickerProps {
@@ -40,24 +35,24 @@ declare namespace ReactDatetimeClass {
          Represents the selected date by the component, in order to use it as a controlled component.
          This prop is parsed by moment.js, so it is possible to use a date string or a moment.js date.
          */
-        value?: Date;
+        value?: Date | string | Moment;
         /*
          Represents the selected date for the component to use it as a uncontrolled component.
          This prop is parsed by moment.js, so it is possible to use a date string or a moment.js date.
          */
-        defaultValue?: Date;
+        defaultValue?: Date | string | Moment;
         /*
          Defines the format for the date. It accepts any moment.js date format.
          If true the date will be displayed using the defaults for the current locale.
          If false the datepicker is disabled and the component can be used as timepicker.
          */
-        dateFormat?: boolean|string;
+        dateFormat?: boolean | string;
         /*
          Defines the format for the time. It accepts any moment.js time format.
          If true the time will be displayed using the defaults for the current locale.
          If false the timepicker is disabled and the component can be used as datepicker.
          */
-        timeFormat?: boolean|string;
+        timeFormat?: boolean | string;
         /*
          Whether to show an input field to edit the date manually.
          */
@@ -101,7 +96,7 @@ declare namespace ReactDatetimeClass {
         /*
          The default view to display when the picker is shown. ('years', 'months', 'days', 'time')
          */
-        viewMode?: ViewMode|number;
+        viewMode?: ViewMode | number;
         /*
          Extra class names for the component markup.
          */
@@ -109,11 +104,7 @@ declare namespace ReactDatetimeClass {
         /*
          Defines additional attributes for the input element of the component.
          */
-        inputProps?: Object;     
-        /*
-        The component which will be used to render the input. The openCalendar method is passed in the props.
-        */
-        renderInput?: React.ComponentClass<InputRendererComponentProps> | React.StatelessComponent<InputRendererComponentProps>;
+        inputProps?: Object;
         /*
          Define the dates that can be selected. The function receives (currentDate, selectedDate)
          and should return a true or false whether the currentDate is valid or not. See selectable dates.

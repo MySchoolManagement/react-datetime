@@ -5,8 +5,8 @@ var assign = require('object-assign'),
 	createClass = require('create-react-class'),
 	moment = require('moment'),
 	React = require('react'),
-	CalendarContainer = require('./src/CalendarContainer'),
-	DefaultInputRenderer = require('./src/DefaultInputRenderer')
+	ReactPopper = require('react-popper'),
+	CalendarContainer = require('./src/CalendarContainer')
 	;
 
 var TYPES = PropTypes;
@@ -39,7 +39,6 @@ var Datetime = createClass({
 			className: '',
 			defaultValue: '',
 			inputProps: {},
-			renderInput: DefaultInputRenderer,
 			input: true,
 			onFocus: nof,
 			onBlur: nof,
@@ -154,7 +153,9 @@ var Datetime = createClass({
 		}
 
 		if ( updatedState.open === undefined ) {
-			if ( this.props.closeOnSelect && this.state.currentView !== 'time' ) {
+			if ( typeof nextProps.open !== 'undefined' ) {
+				updatedState.open = nextProps.open;
+			} else if ( this.props.closeOnSelect && this.state.currentView !== 'time' ) {
 				updatedState.open = false;
 			} else {
 				updatedState.open = this.state.open;
@@ -353,10 +354,10 @@ var Datetime = createClass({
 		this.props.onChange( date );
 	},
 
-	openCalendar: function() {
-		if (!this.state.open) {
+	openCalendar: function( e ) {
+		if ( !this.state.open ) {
 			this.setState({ open: true }, function() {
-				this.props.onFocus();
+				this.props.onFocus( e );
 			});
 		}
 	},
@@ -413,33 +414,61 @@ var Datetime = createClass({
 		// TODO: Make a function or clean up this code,
 		// logic right now is really hard to follow
 		var className = 'rdt' + (this.props.className ?
-                  ( Array.isArray( this.props.className ) ?
-                  ' ' + this.props.className.join( ' ' ) : ' ' + this.props.className) : ''),
-			children = [];
+			(Array.isArray( this.props.className ) ?
+				' ' + this.props.className.join( ' ' ) : ' ' + this.props.className) : '');
 
-		if ( this.props.input ) {
-			children = [ React.createElement(this.props.renderInput, assign({
-				key: 'i',
-				type: 'text',
-				className: 'form-control',
-				openCalendar: this.openCalendar,
-				onChange: this.onInputChange,
-				onKeyDown: this.onInputKey,
-				value: this.state.inputValue
-			}, this.props.inputProps ))];
-		} else {
+		var textBox;
+
+		var finalInputProps = assign( {
+			type: 'text',
+			className: 'form-control',
+			onClick: this.openCalendar,
+			onFocus: this.openCalendar,
+			onChange: this.onInputChange,
+			onKeyDown: this.onInputKey,
+			value: this.state.inputValue,
+		}, this.props.inputProps );
+
+		if (!this.props.input) {
 			className += ' rdtStatic';
+
+			return React.createElement( 'div', {className: className},
+				React.createElement( 'div',
+					{key: 'dt', className: 'rdtPicker'},
+					React.createElement( CalendarContainer, {
+						view: this.state.currentView,
+						viewProps: this.getComponentProps(),
+						onClickOutside: this.handleClickOutside
+					} )
+				)
+			);
+
 		}
 
-		if ( this.state.open )
+		if (this.props.renderInput) {
+			textBox = React.createElement( 'div', null, this.props.renderInput( finalInputProps, this.openCalendar ) );
+		} else {
+			textBox = React.createElement( 'input', finalInputProps );
+		}
+
+		var children = [React.createElement( ReactPopper.Target, {key: 'i'}, textBox )];
+
+		if (this.state.open)
 			className += ' rdtOpen';
 
-		return React.createElement('div', {className: className}, children.concat(
-			React.createElement('div',
-				{ key: 'dt', className: 'rdtPicker' },
-				React.createElement( CalendarContainer, {view: this.state.currentView, viewProps: this.getComponentProps(), onClickOutside: this.handleClickOutside })
+		return React.createElement( ReactPopper.Manager, {className: className},
+			children.concat(
+				React.createElement(
+					ReactPopper.Popper,
+					{key: 'dt', className: 'rdtPicker', placement: 'bottom'},
+					React.createElement( CalendarContainer, {
+						view: this.state.currentView,
+						viewProps: this.getComponentProps(),
+						onClickOutside: this.handleClickOutside
+					} )
+				)
 			)
-		));
+		);
 	}
 });
 
