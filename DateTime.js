@@ -5,6 +5,7 @@ var assign = require('object-assign'),
 	createClass = require('create-react-class'),
 	moment = require('moment'),
 	React = require('react'),
+	ReactPopper = require('react-popper'),
 	CalendarContainer = require('./src/CalendarContainer')
 	;
 
@@ -413,38 +414,61 @@ var Datetime = createClass({
 		// TODO: Make a function or clean up this code,
 		// logic right now is really hard to follow
 		var className = 'rdt' + (this.props.className ?
-                  ( Array.isArray( this.props.className ) ?
-                  ' ' + this.props.className.join( ' ' ) : ' ' + this.props.className) : ''),
-			children = [];
+			(Array.isArray( this.props.className ) ?
+				' ' + this.props.className.join( ' ' ) : ' ' + this.props.className) : '');
 
-		if ( this.props.input ) {
-			var finalInputProps = assign({
-				type: 'text',
-				className: 'form-control',
-				onClick: this.openCalendar,
-				onFocus: this.openCalendar,
-				onChange: this.onInputChange,
-				onKeyDown: this.onInputKey,
-				value: this.state.inputValue,
-			}, this.props.inputProps);
-			if ( this.props.renderInput ) {
-				children = [ React.createElement('div', { key: 'i' }, this.props.renderInput( finalInputProps, this.openCalendar )) ];
-			} else {
-				children = [ React.createElement('input', assign({ key: 'i' }, finalInputProps ))];
-			}
-		} else {
+		var textBox;
+
+		var finalInputProps = assign( {
+			type: 'text',
+			className: 'form-control',
+			onClick: this.openCalendar,
+			onFocus: this.openCalendar,
+			onChange: this.onInputChange,
+			onKeyDown: this.onInputKey,
+			value: this.state.inputValue,
+		}, this.props.inputProps );
+
+		if (!this.props.input) {
 			className += ' rdtStatic';
+
+			return React.createElement( 'div', {className: className},
+				React.createElement( 'div',
+					{key: 'dt', className: 'rdtPicker'},
+					React.createElement( CalendarContainer, {
+						view: this.state.currentView,
+						viewProps: this.getComponentProps(),
+						onClickOutside: this.handleClickOutside
+					} )
+				)
+			);
+
 		}
 
-		if ( this.state.open )
+		if (this.props.renderInput) {
+			textBox = React.createElement( 'div', null, this.props.renderInput( finalInputProps, this.openCalendar ) );
+		} else {
+			textBox = React.createElement( 'input', finalInputProps );
+		}
+
+		var children = [React.createElement( ReactPopper.Target, {key: 'i'}, textBox )];
+
+		if (this.state.open)
 			className += ' rdtOpen';
 
-		return React.createElement( 'div', { className: className }, children.concat(
-			React.createElement( 'div',
-				{ key: 'dt', className: 'rdtPicker' },
-				React.createElement( CalendarContainer, { view: this.state.currentView, viewProps: this.getComponentProps(), onClickOutside: this.handleClickOutside })
+		return React.createElement( ReactPopper.Manager, {className: className},
+			children.concat(
+				React.createElement(
+					ReactPopper.Popper,
+					{key: 'dt', className: 'rdtPicker', placement: 'bottom'},
+					React.createElement( CalendarContainer, {
+						view: this.state.currentView,
+						viewProps: this.getComponentProps(),
+						onClickOutside: this.handleClickOutside
+					} )
+				)
 			)
-		));
+		);
 	}
 });
 

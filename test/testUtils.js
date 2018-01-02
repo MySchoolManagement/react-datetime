@@ -20,7 +20,7 @@ module.exports = {
 	 * Click Simulations
 	 */
 	openDatepicker: (datetime) => {
-		datetime.find('.form-control').simulate('focus');
+		datetime.find('input.form-control').simulate('focus');
 	},
 
 	clickOnElement: (element) => {
@@ -43,7 +43,7 @@ module.exports = {
 	 * Boolean Checks
 	 */
 	isOpen: (datetime) => {
-		return datetime.find('.rdt.rdtOpen').length === 1;
+		return datetime.find('div.rdt.rdtOpen').length === 1;
 	},
 
 	isDayView: (datetime) => {
@@ -119,6 +119,6 @@ module.exports = {
 	},
 
 	getInputValue: (datetime) => {
-		return datetime.find('.rdt > .form-control').getDOMNode().value;
+		return datetime.find('div.rdt input.form-control').getDOMNode().value;
 	}
 };
