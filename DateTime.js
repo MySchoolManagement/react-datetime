@@ -460,7 +460,16 @@ var Datetime = createClass({
 			children.concat(
 				React.createElement(
 					ReactPopper.Popper,
-					{key: 'dt', className: 'rdtPicker', placement: 'bottom'},
+					{
+						key: 'dt',
+						className: 'rdtPicker',
+						placement: 'bottom',
+						modifiers: {
+							preventOverflow: {
+								escapeWithReference: true
+							}
+						}
+					},
 					React.createElement( CalendarContainer, {
 						view: this.state.currentView,
 						viewProps: this.getComponentProps(),
