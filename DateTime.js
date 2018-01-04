@@ -466,7 +466,7 @@ var Datetime = createClass({
 						placement: 'bottom',
 						modifiers: {
 							preventOverflow: {
-								escapeWithReference: true
+								boundariesElement: 'viewport'
 							}
 						}
 					},
