@@ -1,5 +1,5 @@
 /*
-react-datetime v2.11.1-msm.4
+react-datetime v2.11.1-msm.5
 https://github.com/YouCanBookMe/react-datetime
 MIT: https://github.com/YouCanBookMe/react-datetime/raw/master/LICENSE
 */
@@ -429,6 +429,12 @@ return /******/ (function(modules) { // webpackBootstrap
 			});
 		},
 
+		onInputBlur: function () {
+			if ( !(this.state.open || this.props.open) ) {
+				this.onBlur();
+			}
+		},
+
 		onBlur: function () {
 			this.props.onBlur( this.state.selectedDate || this.state.inputValue );
 		},
@@ -491,7 +497,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				onFocus: this.openCalendar,
 				onChange: this.onInputChange,
 				onKeyDown: this.onInputKey,
-				onBlur: this.onBlur,
+				onBlur: this.onInputBlur,
 				value: this.state.inputValue,
 			}, this.props.inputProps );
 
