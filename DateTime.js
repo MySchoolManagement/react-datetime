@@ -368,6 +368,12 @@ var Datetime = createClass({
 		});
 	},
 
+	onInputBlur: function () {
+		if ( !(this.state.open || this.props.open) ) {
+			this.onBlur();
+		}
+	},
+
 	onBlur: function () {
 		this.props.onBlur( this.state.selectedDate || this.state.inputValue );
 	},
@@ -430,7 +436,7 @@ var Datetime = createClass({
 			onFocus: this.openCalendar,
 			onChange: this.onInputChange,
 			onKeyDown: this.onInputKey,
-			onBlur: this.onBlur,
+			onBlur: this.onInputBlur,
 			value: this.state.inputValue,
 		}, this.props.inputProps );
 
