@@ -477,7 +477,7 @@ var Datetime = createClass({
 						placement: 'bottom',
 						modifiers: {
 							preventOverflow: {
-								boundariesElement: 'viewport'
+								boundariesElement: 'scrollParent'
 							}
 						}
 					},
