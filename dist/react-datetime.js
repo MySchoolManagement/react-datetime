@@ -1,5 +1,5 @@
 /*
-react-datetime v2.11.1-msm.5
+react-datetime v2.11.1-msm.6
 https://github.com/YouCanBookMe/react-datetime
 MIT: https://github.com/YouCanBookMe/react-datetime/raw/master/LICENSE
 */
@@ -538,7 +538,7 @@ return /******/ (function(modules) { // webpackBootstrap
 							placement: 'bottom',
 							modifiers: {
 								preventOverflow: {
-									boundariesElement: 'viewport'
+									boundariesElement: 'scrollParent'
 								}
 							}
 						},
