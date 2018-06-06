@@ -464,11 +464,9 @@ var Datetime = createClass({
 
 		var children = [React.createElement( ReactPopper.Target, {key: 'i'}, textBox )];
 
-		if (this.state.open)
+		if (this.state.open) {
 			className += ' rdtOpen';
-
-		return React.createElement( ReactPopper.Manager, {className: className},
-			children.concat(
+			children = children.concat(
 				React.createElement(
 					ReactPopper.Popper,
 					{
@@ -487,7 +485,13 @@ var Datetime = createClass({
 						onClickOutside: this.handleClickOutside
 					} )
 				)
-			)
+			);
+		}
+
+		return React.createElement(
+			ReactPopper.Manager,
+			{className: className},
+			children
 		);
 	}
 });
